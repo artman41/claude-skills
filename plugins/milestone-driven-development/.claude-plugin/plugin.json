@@ -1,0 +1,12 @@
+{
+  "name": "milestone-driven-development",
+  "version": "0.1.0",
+  "description": "How to run large, multi-part, or open-ended work: break it into shippable milestones, ask the user at real forks, verify each milestone for real before calling it done, commit as you go, delegate well-specified chunks to background subagents, and treat existing code and the user's request as having reasonable intent behind them.",
+  "author": {
+    "name": "Tyler Hughes",
+    "email": "tyler@tylerhughes.dev"
+  },
+  "homepage": "https://github.com/artman41/claude-skills/tree/master/plugins/milestone-driven-development",
+  "repository": "https://github.com/artman41/claude-skills",
+  "keywords": ["workflow", "planning", "milestones", "subagents", "git"]
+}

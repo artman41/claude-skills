@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-skills",
+  "description": "Tyler Hughes' personal collection of Claude Code skills, distributed as a plugin marketplace.",
+  "owner": {
+    "name": "Tyler Hughes",
+    "email": "tyler@tylerhughes.dev"
+  },
+  "plugins": [
+    {
+      "name": "milestone-driven-development",
+      "description": "How to run large, multi-part, or open-ended work: break it into shippable milestones, ask the user at real forks, verify each milestone for real before calling it done, commit as you go, delegate well-specified chunks to background subagents, and treat existing code and the user's request as having reasonable intent behind them.",
+      "source": "./plugins/milestone-driven-development",
+      "author": {
+        "name": "Tyler Hughes",
+        "email": "tyler@tylerhughes.dev"
+      },
+      "category": "workflow"
+    }
+  ]
+}
