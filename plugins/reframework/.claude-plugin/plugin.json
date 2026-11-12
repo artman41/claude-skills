@@ -1,0 +1,12 @@
+{
+  "name": "reframework",
+  "version": "0.1.0",
+  "description": "Write, debug, and explain mods and scripts for REFramework (REF, by praydog) — the modding framework and scripting platform for Capcom RE Engine games (Resident Evil, Monster Hunter, Dragon's Dogma 2, Devil May Cry 5, Street Fighter 6, and more). Covers REFramework Lua scripting (the sdk/re/imgui/draw/json/fs/log/thread namespaces), the RE Engine type system (REManagedObject, RETypeDefinition, SystemArray, the TDB), method hooking with sdk.hook, and the C++/C# plugin APIs.",
+  "author": {
+    "name": "Tyler Hughes",
+    "email": "tyler@tylerhughes.dev"
+  },
+  "homepage": "https://github.com/artman41/claude-skills/tree/master/plugins/reframework",
+  "repository": "https://github.com/artman41/claude-skills",
+  "keywords": ["reframework", "re-engine", "praydog", "game-modding", "lua", "modding", "resident-evil", "monster-hunter"]
+}
