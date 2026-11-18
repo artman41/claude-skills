@@ -24,6 +24,7 @@ Then install whichever skill(s) you want:
 
 | Plugin | Skill | What it does |
 |---|---|---|
+| [`working-style`](plugins/working-style) | `working-style` | The default operating style for any task: act when there's enough to act on, ask only at real forks (2–4 options, recommendation first), build the least that works, fix root causes, verify before claiming success, report briefly and honestly, and confirm before risky or outward-facing actions. Portable to other agents (Kimi, Codex, Gemini) — see its README. |
 | [`milestone-driven-development`](plugins/milestone-driven-development) | `milestone-driven-development` | How to run large, multi-part, or open-ended work: plan it into shippable milestones, ask at real forks instead of guessing, verify each milestone for real before calling it done, commit as you go, delegate well-specified chunks to background subagents, and treat existing code and the user's request as having reasonable intent behind them. |
 | [`reframework`](plugins/reframework) | `reframework` | Write, debug, and explain mods and scripts for [REFramework](https://github.com/praydog/REFramework) (praydog's modding framework for Capcom RE Engine games — Resident Evil, Monster Hunter, Dragon's Dogma 2, DMC5, SF6, and more): the Lua API (`sdk`/`re`/`imgui`/`draw`/…), the RE Engine type system and TDB, method hooking with `sdk.hook`, and the C++/C# plugin APIs — grounded in the binding source. |
 

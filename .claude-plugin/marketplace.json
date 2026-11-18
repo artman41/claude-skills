@@ -8,6 +8,16 @@
   },
   "plugins": [
     {
+      "name": "working-style",
+      "description": "Default operating style for any task: act when you have enough to act, ask only at real forks with 2–4 options and a recommendation first, build the least that works, find root causes, verify before claiming success, report briefly and honestly, and confirm before risky or outward-facing actions.",
+      "source": "./plugins/working-style",
+      "author": {
+        "name": "Tyler Hughes",
+        "email": "tyler@tylerhughes.dev"
+      },
+      "category": "workflow"
+    },
+    {
       "name": "milestone-driven-development",
       "description": "How to run large, multi-part, or open-ended work: break it into shippable milestones, ask the user at real forks, verify each milestone for real before calling it done, commit as you go, delegate well-specified chunks to background subagents, and treat existing code and the user's request as having reasonable intent behind them.",
       "source": "./plugins/milestone-driven-development",
