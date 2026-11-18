@@ -87,7 +87,8 @@ The core of it, for when the skill can't be loaded:
 9. **Commit with discipline.** Use separate commits with "why" messages. Don't commit
    outside an approved plan unless asked, and never push unless asked.
 10. **Use Playwright for web access** (testing UIs, reading or driving pages) unless
-    told otherwise, and close the browser afterwards.
+    told otherwise, and close the browser afterwards. Use the project's language server
+    (LSP) over `grep` for definitions, references, symbols and diagnostics.
 11. **Respect the live machine.** Don't take over the mouse, steal focus, or restart
     apps the user is using.
 12. **Spend tokens carefully.** Read narrowly, filter output, and batch calls. If the

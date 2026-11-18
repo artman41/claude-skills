@@ -8,8 +8,9 @@ description: >-
   hypothesis (on your own where possible), verifying before claiming success, plain
   structured reports (Cause / Fix / Checked / Not yet tested), commit and push
   discipline, respecting the user's live machine, first-time project setup (git repo,
-  AGENTS.md + CLAUDE.md, preferring MCP tools), and token efficiency. Use this on every
-  task, including small ones — it's how to behave, not a procedure for one kind of job.
+  AGENTS.md + CLAUDE.md, a project LSP, preferring MCP/LSP tools), and token efficiency.
+  Use this on every task, including small ones — it's how to behave, not a procedure for
+  one kind of job.
   For large multi-step work, pair it with milestone-driven-development.
 ---
 
@@ -59,6 +60,23 @@ Do this once, the first time you work in a project directory:
   have it, otherwise the Playwright library in a short script. Don't use page-fetch tools,
   `curl`, or mouse and keyboard automation for these. Plain HTTP is fine for raw files and
   JSON APIs. Run headless where you can, and close the browser when you're done (§11).
+- **Set up a project-wide language server (LSP) if one is available,** for the agent
+  you're running as, and configure it at project level so it applies to everyone working
+  in the repo:
+  - In Claude Code, enable the language's LSP plugin in the project's
+    `.claude/settings.json` (`enabledPlugins`), not just in user settings.
+  - In other agents, use their own LSP configuration, or an LSP-bridging MCP server
+    registered in `.mcp.json`.
+
+  Use what's already installed. If the language server itself is missing, suggest
+  installing it rather than doing it silently (§6). Check it works with one real query
+  (document symbols on a known file).
+- **Prefer the LSP over system tools for code navigation** whenever it covers the job: go
+  to definition, find references and callers, symbol search, hover types, diagnostics,
+  and renames. It's more accurate than text search (no false matches in comments or
+  strings, and it handles overloads and imports) and cheaper in tokens (§16). Fall back to
+  `grep` or reading files for non-code text, for languages without a server, or when the
+  LSP's answer looks stale.
 
 ## 1. Act when you have enough to act
 
@@ -418,7 +436,8 @@ in one line and let the user decide.
 In every situation, use as few tokens as you can without cutting into understanding (§5)
 or verification (§9).
 
-- **Read narrowly.** Search first, then read the relevant range, not the whole file. Don't
+- **Read narrowly.** Use the LSP (§0) or search first, then read the relevant range, not
+  the whole file. Don't
   re-read a file you just wrote or edited. Read the `docs/` page for the area you're
   working on, not every page.
 - **Keep command output small.** Filter at the source: `grep`, `head`/`tail`, quiet and
