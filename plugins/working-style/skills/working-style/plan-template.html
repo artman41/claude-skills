@@ -1,0 +1,259 @@
+<!doctype html>
+<!--
+  Plan review page (working-style skill, §4). Don't copy or edit this file per plan.
+  Serve it with plan_server.py (next to it), which injects the plan JSON and receives the
+  feedback:  python plan_server.py <plan.json>
+  Plan JSON fields:
+    title, summary, branch (string or null), risks: [string],
+    milestones: [{ id, title, what: [string], verify, risk (string or null) }],
+    questions:  [{ id, question, options: [string], recommended (index or null) }]
+  Strings are plain text (no HTML).
+  "Send to agent" POSTs to /feedback:
+    { title, milestones: [{ id, title, verdict: "approved"|"changes"|null, comment }],
+      questions: [{ id, question, choice (text or null), note }], overall, text }
+  If the POST fails (e.g. the server has stopped), the page shows the text to copy instead.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan</title>
+<link rel="icon" href="data:,">
+<style>
+  /* Follows the system theme by default; the toggle can force light or dark. */
+  :root {
+    color-scheme: light;
+    --bg: #f6f7f9; --card: #fff; --text: #1d2330; --muted: #5b6475; --line: #dde1e8;
+    --accent: #2f5bd3; --on-accent: #fff;
+    --ok: #1f7a4d; --ok-bg: #e6f4ec; --warn: #9a5b00; --warn-bg: #fdf1dd;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #14171d; --card: #1c2028; --text: #e6e9ef; --muted: #9aa3b2; --line: #2c323d;
+      --accent: #7c9cff; --on-accent: #0b1020;
+      --ok: #5fd39a; --ok-bg: #173327; --warn: #f2b65a; --warn-bg: #3a2c14;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #14171d; --card: #1c2028; --text: #e6e9ef; --muted: #9aa3b2; --line: #2c323d;
+    --accent: #7c9cff; --on-accent: #0b1020;
+    --ok: #5fd39a; --ok-bg: #173327; --warn: #f2b65a; --warn-bg: #3a2c14;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 20px 120px; }
+  h1 { font-size: 1.6rem; margin: 0 0 6px; }
+  h2 { font-size: 1.05rem; margin: 32px 0 12px; color: var(--muted); text-transform: uppercase;
+       letter-spacing: .04em; }
+  h3 { font-size: 1.1rem; margin: 0; }
+  p { margin: 0 0 8px; }
+  .meta { color: var(--muted); margin-bottom: 4px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+          padding: 16px 18px; margin-bottom: 14px; }
+  .card.approved { border-color: var(--ok); }
+  .card.changes { border-color: var(--warn); }
+  .head { display: flex; gap: 12px; align-items: baseline; justify-content: space-between;
+          flex-wrap: wrap; }
+  .tag { font-size: .8rem; font-weight: 600; padding: 2px 8px; border-radius: 99px; }
+  .tag.approved { color: var(--ok); background: var(--ok-bg); }
+  .tag.changes { color: var(--warn); background: var(--warn-bg); }
+  ul { margin: 8px 0; padding-left: 20px; }
+  .label { font-weight: 600; }
+  .risk { color: var(--warn); }
+  .actions { display: flex; gap: 8px; margin: 12px 0 8px; flex-wrap: wrap; }
+  button { font: inherit; border: 1px solid var(--line); background: transparent; color: var(--text);
+           border-radius: 7px; padding: 6px 12px; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--accent);
+           outline-offset: 2px; }
+  button[aria-pressed="true"].approve { background: var(--ok-bg); border-color: var(--ok); color: var(--ok); }
+  button[aria-pressed="true"].change { background: var(--warn-bg); border-color: var(--warn); color: var(--warn); }
+  textarea { width: 100%; min-height: 60px; font: inherit; color: var(--text); background: var(--bg);
+             border: 1px solid var(--line); border-radius: 7px; padding: 8px; resize: vertical; }
+  fieldset { border: 0; padding: 0; margin: 8px 0; }
+  .opt { display: flex; gap: 8px; align-items: baseline; margin: 4px 0; }
+  .rec { color: var(--accent); font-size: .85rem; }
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card);
+         border-top: 1px solid var(--line); }
+  .bar div { max-width: 860px; margin: 0 auto; padding: 12px 20px; display: flex; gap: 12px;
+             align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+  .status { color: var(--muted); }
+  #fallback { display: none; margin-top: 12px; min-height: 160px; }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title"></h1>
+  <p class="meta" id="branch"></p>
+  <p id="summary"></p>
+  <section id="risks-section"><h2>Risks</h2><ul id="risks"></ul></section>
+  <h2>Milestones</h2>
+  <div id="milestones"></div>
+  <section id="questions-section"><h2>Questions</h2><div id="questions"></div></section>
+  <h2>Overall notes</h2>
+  <div class="card"><textarea id="overall" aria-label="Overall notes"
+    placeholder="Anything else: reorder, add or drop milestones, constraints…"></textarea></div>
+  <textarea id="fallback" aria-label="Feedback text to paste into the chat" readonly></textarea>
+</main>
+<div class="bar"><div>
+  <span class="status" id="progress" aria-live="polite"></span>
+  <span>
+    <button id="theme" aria-label="Switch colour theme"></button>
+    <button id="approve-all">Approve all</button>
+    <button class="primary" id="send">Send to agent</button>
+  </span>
+</div></div>
+
+<script type="application/json" id="plan-data">
+{
+  "title": "Example plan",
+  "summary": "Replace this JSON with the real plan.",
+  "branch": "feature/example",
+  "risks": ["The main risk, and how the plan contains it."],
+  "milestones": [
+    { "id": "M1", "title": "First milestone", "what": ["What it does", "What it changes"],
+      "verify": "How it will be checked", "risk": null }
+  ],
+  "questions": [
+    { "id": "Q1", "question": "A decision that's yours to make?",
+      "options": ["Recommended option", "Alternative"], "recommended": 0 }
+  ]
+}
+</script>
+<script>
+const themeBtn = document.getElementById('theme');
+const themes = ['system', 'light', 'dark'];
+const applyTheme = t => {
+  if (t === 'system') delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = t;
+  themeBtn.textContent = 'Theme: ' + t;
+  localStorage.setItem('plan-theme', t);
+};
+applyTheme(themes.includes(localStorage.getItem('plan-theme')) ? localStorage.getItem('plan-theme') : 'system');
+themeBtn.onclick = () => applyTheme(themes[(themes.indexOf(localStorage.getItem('plan-theme')) + 1) % 3]);
+
+const plan = JSON.parse(document.getElementById('plan-data').textContent);
+const key = 'plan-feedback:' + plan.title;
+const state = Object.assign({ m: {}, q: {}, overall: '' }, JSON.parse(localStorage.getItem(key) || '{}'));
+const save = () => { localStorage.setItem(key, JSON.stringify(state)); render(); };
+const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
+
+document.title = plan.title;
+document.getElementById('title').textContent = plan.title;
+document.getElementById('summary').textContent = plan.summary || '';
+document.getElementById('branch').textContent = plan.branch ? 'Branch: ' + plan.branch : '';
+const risks = plan.risks || [];
+if (!risks.length) document.getElementById('risks-section').hidden = true;
+risks.forEach(r => document.getElementById('risks').append(el('li', { textContent: r })));
+
+const msBox = document.getElementById('milestones');
+plan.milestones.forEach(m => {
+  const s = state.m[m.id] ||= { verdict: null, comment: '' };
+  const tag = el('span', { className: 'tag' });
+  const approve = el('button', { className: 'approve', textContent: 'Approve' });
+  const change = el('button', { className: 'change', textContent: 'Request changes' });
+  const comment = el('textarea', { value: s.comment, placeholder: 'Comment or suggestion (optional)' });
+  comment.setAttribute('aria-label', m.id + ' comment');
+  approve.onclick = () => { s.verdict = s.verdict === 'approved' ? null : 'approved'; save(); };
+  change.onclick = () => { s.verdict = s.verdict === 'changes' ? null : 'changes'; save(); };
+  comment.oninput = () => { s.comment = comment.value; localStorage.setItem(key, JSON.stringify(state)); };
+  const card = el('article', { className: 'card' },
+    el('div', { className: 'head' }, el('h3', { textContent: m.id + ' · ' + m.title }), tag),
+    el('ul', {}, ...(m.what || []).map(w => el('li', { textContent: w }))),
+    el('p', {}, el('span', { className: 'label', textContent: 'Verify: ' }), m.verify || ''),
+    ...(m.risk ? [el('p', { className: 'risk' }, el('span', { className: 'label', textContent: 'Risk: ' }), m.risk)] : []),
+    el('div', { className: 'actions' }, approve, change), comment);
+  card._sync = () => {
+    card.className = 'card ' + (s.verdict || '');
+    approve.setAttribute('aria-pressed', s.verdict === 'approved');
+    change.setAttribute('aria-pressed', s.verdict === 'changes');
+    tag.className = 'tag ' + (s.verdict || '');
+    tag.textContent = s.verdict === 'approved' ? 'Approved' : s.verdict === 'changes' ? 'Changes requested' : '';
+  };
+  msBox.append(card);
+});
+
+const qs = plan.questions || [];
+if (!qs.length) document.getElementById('questions-section').hidden = true;
+qs.forEach(q => {
+  const s = state.q[q.id] ||= { choice: q.recommended ?? null, other: '' };
+  const fs = el('fieldset', {}, el('legend', { className: 'label', textContent: q.id + ' · ' + q.question }));
+  q.options.forEach((o, i) => {
+    const r = el('input', { type: 'radio', name: q.id, checked: s.choice === i });
+    r.onchange = () => { s.choice = i; save(); };
+    fs.append(el('label', { className: 'opt' }, r, o,
+      ...(i === q.recommended ? [el('span', { className: 'rec', textContent: '(Recommended)' })] : [])));
+  });
+  const other = el('textarea', { value: s.other, placeholder: 'Something else, or a note on your choice' });
+  other.setAttribute('aria-label', q.id + ' note');
+  other.oninput = () => { s.other = other.value; localStorage.setItem(key, JSON.stringify(state)); };
+  document.getElementById('questions').append(el('div', { className: 'card' }, fs, other));
+});
+
+const overall = document.getElementById('overall');
+overall.value = state.overall;
+overall.oninput = () => { state.overall = overall.value; localStorage.setItem(key, JSON.stringify(state)); };
+
+document.getElementById('approve-all').onclick = () => {
+  plan.milestones.forEach(m => { state.m[m.id].verdict = 'approved'; }); save();
+};
+
+function feedback() {
+  const lines = ['Plan feedback: ' + plan.title, ''];
+  plan.milestones.forEach(m => {
+    const s = state.m[m.id];
+    const v = s.verdict === 'approved' ? 'APPROVED' : s.verdict === 'changes' ? 'CHANGES REQUESTED' : 'NO RESPONSE';
+    lines.push(`${m.id} ${m.title}: ${v}` + (s.comment.trim() ? ' (' + s.comment.trim() + ')' : ''));
+  });
+  qs.forEach(q => {
+    const s = state.q[q.id];
+    const pick = s.choice == null ? 'no choice' : q.options[s.choice];
+    lines.push(`${q.id} ${q.question}: ${pick}` + (s.other.trim() ? ' (' + s.other.trim() + ')' : ''));
+  });
+  if (state.overall.trim()) lines.push('', 'Overall: ' + state.overall.trim());
+  return lines.join('\n');
+}
+
+function payload() {
+  return {
+    title: plan.title,
+    milestones: plan.milestones.map(m => ({ id: m.id, title: m.title, verdict: state.m[m.id].verdict,
+                                            comment: state.m[m.id].comment.trim() })),
+    questions: qs.map(q => ({ id: q.id, question: q.question,
+                              choice: state.q[q.id].choice == null ? null : q.options[state.q[q.id].choice],
+                              note: state.q[q.id].other.trim() })),
+    overall: state.overall.trim(),
+    text: feedback(),
+  };
+}
+
+document.getElementById('send').onclick = async () => {
+  const status = document.getElementById('progress');
+  try {
+    const r = await fetch('feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify(payload()) });
+    if (!r.ok) throw new Error(r.status);
+    localStorage.removeItem(key);  // a revised plan starts fresh
+    document.querySelectorAll('main button, main textarea, main input, #approve-all, #send')
+      .forEach(e => e.disabled = true);
+    status.textContent = 'Sent. The agent has your feedback; you can close this tab.';
+  } catch {
+    const f = document.getElementById('fallback');
+    f.style.display = 'block'; f.value = feedback(); f.select();
+    status.textContent = "Couldn't reach the agent: copy the text below into the chat.";
+  }
+};
+
+function render() {
+  msBox.querySelectorAll('article').forEach(c => c._sync());
+  const n = plan.milestones.filter(m => state.m[m.id].verdict === 'approved').length;
+  document.getElementById('progress').textContent = `${n} of ${plan.milestones.length} milestones approved`;
+}
+render();
+</script>
+</body>
+</html>
