@@ -1,0 +1,18 @@
+{
+  "description": "Load the working-style skill into context at session start, after /clear and after compaction.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "d=\"${CLAUDE_PLUGIN_ROOT}/skills/working-style\"; printf '<working-style>\\nThe working-style skill is loaded automatically; follow it on every task. Its fragments are in %s/references/ (read one only when its trigger applies).\\n\\n' \"$d\"; awk 'f>=2; /^---$/{f++}' \"$d/SKILL.md\"; printf '</working-style>\\n'",
+            "commandWindows": "[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); $d=\"$env:CLAUDE_PLUGIN_ROOT\\skills\\working-style\"; \"<working-style>`nThe working-style skill is loaded automatically; follow it on every task. Its fragments are in $d\\references\\ (read one only when its trigger applies).`n\"; (Get-Content -Raw -Encoding UTF8 \"$d\\SKILL.md\") -replace '(?s)^---.*?\\n---\\r?\\n',''; '</working-style>'",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

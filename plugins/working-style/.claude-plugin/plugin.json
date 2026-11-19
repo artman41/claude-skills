@@ -1,6 +1,6 @@
 {
   "name": "working-style",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Default operating style for any task: act when you have enough to act, ask only at real forks with 2–4 options and a recommendation first, build the least that works, find root causes, verify before claiming success, report briefly and honestly, and confirm before risky or outward-facing actions.",
   "author": {
     "name": "Tyler Hughes",

@@ -52,7 +52,8 @@ anything below disagrees with it, the skill wins.
   https://github.com/artman41/claude-skills into your skills directory.
 - **No skill support:** read
   https://raw.githubusercontent.com/artman41/claude-skills/master/plugins/working-style/skills/working-style/SKILL.md
-  and follow it.
+  and follow it. It links fragments under `references/` (same URL, `SKILL.md` replaced
+  by `references/<name>.md`); fetch one only when its trigger applies.
 
 The core of it, for when the skill can't be loaded:
 
